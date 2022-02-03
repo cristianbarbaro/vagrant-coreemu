@@ -35,6 +35,8 @@ Vagrant.configure("2") do |config|
       apt-get update
       apt-get -y upgrade
       apt-get -y install libtk-img wget net-tools
+      snap install frr
+      ln -s /usr/local/bin/vcmd /usr/sbin/vcmd
     SHELL
   
     config.vm.provision :shell, privileged: false, inline: <<-SHELL
