@@ -1,15 +1,18 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-# Vagrant configuration standard version 2
 Vagrant.configure("2") do |config|
     config.vm.box = "ubuntu/focal64"
   
-    #current folder will be shared in the vagrant VM
+    # carpeta compartida con el host
     config.vm.synced_folder "./shared", "/home/vagrant/shared"
 
-    # vm in host LAN (bridge interface)
-    #config.vm.network "public_network"
+    # ip acceso a la vm desde el host
+    # crea una segunda NIC
+    config.vm.network "private_network", ip: "10.100.100.10"
+
+    # forwarding de puerto desde el puerto host al puerto de la vm:
+    #config.vm.network "forwarded_port", guest: 80, host: 8080
     
     config.vm.hostname = "corevm"
   
@@ -23,7 +26,8 @@ Vagrant.configure("2") do |config|
       vb.customize ['modifyvm', :id, '--vram', '128']
       vb.customize ['modifyvm', :id, '--vrde', 'off']
       vb.customize ['modifyvm', :id, '--clipboard', 'bidirectional']
-      vb.customize ["modifyvm", :id, "--nic2", "intnet"]
+      # la tercera NIC es para la topología interna
+      vb.customize ["modifyvm", :id, "--nic3", "intnet"]
     end
   
     config.vm.provision "shell", inline: <<-SHELL
