@@ -10,12 +10,13 @@ Vagrant.configure("2") do |config|
 
     # vm in host LAN (bridge interface)
     #config.vm.network "public_network"
+    
+    config.vm.hostname = "corevm"
   
     config.vm.provider "virtualbox" do |vb|
       vb.gui = false
       vb.memory = "4096"
       vb.name = "corevm"
-      vb.hostname = "corehost"
       vb.cpus = 2
       vb.customize ['modifyvm', :id, '--graphicscontroller', 'vmsvga']
       vb.customize ['modifyvm', :id, '--accelerate3d', 'on']
