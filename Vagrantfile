@@ -28,7 +28,7 @@ Vagrant.configure("2") do |config|
       vb.customize ['modifyvm', :id, '--vrde', 'off']
       vb.customize ['modifyvm', :id, '--clipboard', 'bidirectional']
       # la tercera NIC es para la topología interna 
-      vb.customize ["modifyvm", :id, "--nic3", "hostonly"]
+      vb.customize ["modifyvm", :id, "--nic3", "intnet"]
     end
   
     config.vm.provision "shell", inline: <<-SHELL
