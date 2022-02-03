@@ -21,13 +21,14 @@ Vagrant.configure("2") do |config|
       vb.memory = "4096"
       vb.name = "corevm"
       vb.cpus = 2
+      # https://docs.oracle.com/en/virtualization/virtualbox/6.0/user/vboxmanage-modifyvm.html
       vb.customize ['modifyvm', :id, '--graphicscontroller', 'vmsvga']
       vb.customize ['modifyvm', :id, '--accelerate3d', 'on']
       vb.customize ['modifyvm', :id, '--vram', '128']
       vb.customize ['modifyvm', :id, '--vrde', 'off']
       vb.customize ['modifyvm', :id, '--clipboard', 'bidirectional']
-      # la tercera NIC es para la topología interna
-      vb.customize ["modifyvm", :id, "--nic3", "intnet"]
+      # la tercera NIC es para la topología interna 
+      vb.customize ["modifyvm", :id, "--nic3", "hostonly"]
     end
   
     config.vm.provision "shell", inline: <<-SHELL
