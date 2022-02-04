@@ -5,18 +5,6 @@
 * Ejecutar el siguiente comando para crear la VM:
     * `vagrant up`
 
-* Ejecutar el siguiente comando para instalar `coreemu` y `frr` (debe hacerse de esta manera porque es necesario desloguearse para crear los PATHS necesarios y solo se ejecutan después de crear la VM):
-    ```bash
-    vagrant ssh -c \
-        "cd core-release-8.0.0; \
-        inv install -o --no-ospf; \
-        sudo apt-get -y install frr frr-pythontools; \
-        sudo systemctl enable core-daemon; \
-        sudo systemctl start core-daemon; \
-        sudo systemctl enable frr.service; \
-        sudo systemctl start frr.service"
-    ```
-
 
 ### Acceso a la VM:
 

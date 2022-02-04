@@ -47,6 +47,13 @@ Vagrant.configure("2") do |config|
       wget https://github.com/coreemu/core/archive/refs/tags/release-8.0.0.tar.gz
       tar -xf release-8.0.0.tar.gz && cd core-release-8.0.0
       ./setup.sh
+      . ~/.profile
+      inv install -o --no-ospf
+      sudo apt-get -y install frr frr-pythontools
+      sudo systemctl enable core-daemon
+      sudo systemctl start core-daemon
+      sudo systemctl enable frr.service
+      sudo systemctl start frr.service
     SHELL
   
   end
