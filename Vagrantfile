@@ -36,7 +36,7 @@ Vagrant.configure("2") do |config|
     config.vm.provision "shell", inline: <<-SHELL
       apt-get update
       apt-get -y upgrade
-      apt-get -y install libtk-img wget net-tools
+      apt-get -y install libtk-img wget net-tools resolvconf
       ln -s /usr/local/bin/vcmd /usr/sbin/vcmd
       curl -s https://deb.frrouting.org/frr/keys.asc | apt-key add -
       echo deb https://deb.frrouting.org/frr $(lsb_release -s -c) frr-stable | sudo tee -a /etc/apt/sources.list.d/frr.list
