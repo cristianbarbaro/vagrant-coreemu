@@ -8,8 +8,10 @@ Vagrant.configure("2") do |config|
     config.vm.synced_folder "./shared", "/home/vagrant/shared"
 
     # ip acceso a la vm desde el host
-    # crea una segunda NIC
-    config.vm.network "private_network", ip: "10.100.100.10"
+    #config.vm.network "private_network", ip: "10.100.100.10"
+
+    # acceso mediante una interfaz en modo bridge
+    config.vm.network "public_network"
 
     # forwarding de puerto desde el puerto host al puerto de la vm:
     #config.vm.network "forwarded_port", guest: 80, host: 8080
@@ -34,7 +36,7 @@ Vagrant.configure("2") do |config|
     config.vm.provision "shell", inline: <<-SHELL
       apt-get update
       apt-get -y upgrade
-      apt-get -y install libtk-img wget net-tools frr
+      apt-get -y install libtk-img wget net-tools
       ln -s /usr/local/bin/vcmd /usr/sbin/vcmd
     SHELL
   
