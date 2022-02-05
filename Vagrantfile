@@ -8,7 +8,7 @@ Vagrant.configure("2") do |config|
     config.vm.synced_folder "./shared", "/home/vagrant/shared"
 
     # ip acceso a la vm desde el host
-    #config.vm.network "private_network", ip: "10.100.100.10"
+    #config.vm.network "private_network", ip: "192.168.100.10"
 
     # acceso mediante una interfaz en modo bridge
     config.vm.network "public_network"
@@ -38,6 +38,7 @@ Vagrant.configure("2") do |config|
       apt-get -y upgrade
       apt-get -y install libtk-img wget net-tools resolvconf apache2
       ln -s /usr/local/bin/vcmd /usr/sbin/vcmd
+      sysctl -w net.ipv4.ip_forward=1
       #curl -s https://deb.frrouting.org/frr/keys.asc | apt-key add -
       #echo deb https://deb.frrouting.org/frr $(lsb_release -s -c) frr-stable | sudo tee -a /etc/apt/sources.list.d/frr.list
       #apt update
