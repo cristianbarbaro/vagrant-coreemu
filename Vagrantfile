@@ -38,9 +38,9 @@ Vagrant.configure("2") do |config|
       apt-get -y upgrade
       apt-get -y install libtk-img wget net-tools resolvconf apache2
       ln -s /usr/local/bin/vcmd /usr/sbin/vcmd
-      curl -s https://deb.frrouting.org/frr/keys.asc | apt-key add -
-      echo deb https://deb.frrouting.org/frr $(lsb_release -s -c) frr-stable | sudo tee -a /etc/apt/sources.list.d/frr.list
-      apt update
+      #curl -s https://deb.frrouting.org/frr/keys.asc | apt-key add -
+      #echo deb https://deb.frrouting.org/frr $(lsb_release -s -c) frr-stable | sudo tee -a /etc/apt/sources.list.d/frr.list
+      #apt update
     SHELL
   
     config.vm.provision :shell, privileged: false, inline: <<-SHELL
