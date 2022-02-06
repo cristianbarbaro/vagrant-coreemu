@@ -8,10 +8,10 @@ Vagrant.configure("2") do |config|
     config.vm.synced_folder "./shared", "/home/vagrant/shared"
 
     # ip acceso a la vm desde el host
-    config.vm.network "private_network", ip: "192.168.100.10"
+    #config.vm.network "private_network", ip: "192.168.100.10"
 
     # acceso mediante una interfaz en modo bridge
-    # config.vm.network "public_network"
+    config.vm.network "public_network"
 
     # forwarding de puerto desde el puerto host al puerto de la vm:
     #config.vm.network "forwarded_port", guest: 80, host: 8080
@@ -24,12 +24,6 @@ Vagrant.configure("2") do |config|
       vb.name = "corevm"
       vb.cpus = 2
       # https://docs.oracle.com/en/virtualization/virtualbox/6.0/user/vboxmanage-modifyvm.html
-      vb.customize ['modifyvm', :id, '--graphicscontroller', 'vmsvga']
-      vb.customize ['modifyvm', :id, '--accelerate3d', 'on']
-      vb.customize ['modifyvm', :id, '--vram', '128']
-      vb.customize ['modifyvm', :id, '--vrde', 'off']
-      vb.customize ['modifyvm', :id, '--clipboard', 'bidirectional']
-      # la tercera NIC es para la topología interna 
       vb.customize ["modifyvm", :id, "--nic3", "intnet"]
     end
   
@@ -38,7 +32,7 @@ Vagrant.configure("2") do |config|
       apt-get -y upgrade
       apt-get -y install libtk-img wget net-tools resolvconf apache2 bridge-utils
       ln -s /usr/local/bin/vcmd /usr/sbin/vcmd
-      sysctl -w net.ipv4.ip_forward=1
+      echo 1 > /proc/sys/net/ipv4/ip_forward
       #curl -s https://deb.frrouting.org/frr/keys.asc | apt-key add -
       #echo deb https://deb.frrouting.org/frr $(lsb_release -s -c) frr-stable | sudo tee -a /etc/apt/sources.list.d/frr.list
       #apt update
