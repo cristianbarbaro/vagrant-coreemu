@@ -36,7 +36,7 @@ Vagrant.configure("2") do |config|
     config.vm.provision "shell", inline: <<-SHELL
       apt-get update
       apt-get -y upgrade
-      apt-get -y install libtk-img wget net-tools resolvconf apache2
+      apt-get -y install libtk-img wget net-tools resolvconf apache2 bridge-utils
       ln -s /usr/local/bin/vcmd /usr/sbin/vcmd
       sysctl -w net.ipv4.ip_forward=1
       #curl -s https://deb.frrouting.org/frr/keys.asc | apt-key add -
