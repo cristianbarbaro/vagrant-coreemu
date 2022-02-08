@@ -27,6 +27,16 @@ Vagrant.configure("2") do |config|
     vb.customize ["modifyvm", :id, "--nic3", "intnet"]
   end
 
+  config.trigger.after :up, :provision, :resume  do |trigger|
+    trigger.info = "Agregando rutas en host"
+    trigger.run= {inline: "bash routes.sh --add"}
+  end
+
+  config.trigger.before :halt, :destroy, :suspend  do |trigger|
+    trigger.info = "Borrando rutas en host"
+    trigger.run= {inline: "bash routes.sh --del"}
+  end
+
   config.vm.provision "shell", inline: <<-SHELL
     apt-get update
     apt-get -y upgrade
