@@ -32,7 +32,7 @@ Vagrant.configure("2") do |config|
     apt-get -y upgrade
     apt-get -y install libtk-img wget net-tools resolvconf apache2 bridge-utils
     ln -s /usr/local/bin/vcmd /usr/sbin/vcmd
-    echo 1 > /proc/sys/net/ipv4/ip_forward
+    echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf && sysctl -p
     
     ## Instalacion de FRR, actualmente instala FRR 8.1.0 pero no anda la distribucion de rutas BGP
     #curl -s https://deb.frrouting.org/frr/keys.asc | apt-key add -
