@@ -25,6 +25,10 @@ Vagrant.configure("2") do |config|
     vb.cpus = 2
     # https://docs.oracle.com/en/virtualization/virtualbox/6.0/user/vboxmanage-modifyvm.html
     vb.customize ["modifyvm", :id, "--nic3", "intnet"]
+    # Esto tal vez soluciona los tiempos de ssh, tal vez no
+    # # https://github.com/hashicorp/vagrant/issues/11777
+    # vb.customize ["modifyvm", :id, "--uart1", "0x3F8", "4"]
+    # vb.customize ["modifyvm", :id, "--uartmode1", "file", File::NULL]
   end
 
   config.trigger.after :up, :provision, :resume  do |trigger|
@@ -40,7 +44,7 @@ Vagrant.configure("2") do |config|
   config.vm.provision "shell", inline: <<-SHELL
     apt-get update
     apt-get -y upgrade
-    apt-get -y install libtk-img wget net-tools resolvconf apache2 bridge-utils
+    apt-get -y install libtk-img wget net-tools resolvconf apache2 bridge-utils xfce4-terminal
     ln -s /usr/local/bin/vcmd /usr/sbin/vcmd
     echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf && sysctl -p
     
