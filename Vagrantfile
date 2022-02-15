@@ -44,7 +44,7 @@ Vagrant.configure("2") do |config|
   config.vm.provision "shell", inline: <<-SHELL
     apt-get update
     apt-get -y upgrade
-    apt-get -y install libtk-img wget net-tools resolvconf apache2 bridge-utils xfce4-terminal
+    apt-get -y install libtk-img wget net-tools resolvconf apache2 bridge-utils xfce4-terminal hping3 traceroute
     export DEBIAN_FRONTEND=noninteractive; apt-get -yq install fprobe
     ln -s /usr/local/bin/vcmd /usr/sbin/vcmd
     echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf && sysctl -p

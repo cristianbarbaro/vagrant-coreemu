@@ -27,6 +27,12 @@ echo "Aplicando comando $cmd en rutas hacia la VM:"
 echo "sudo ip route $cmd 163.20.0.0/16 via $VM_IP"
 sudo ip route $cmd 163.20.0.0/16 via $VM_IP
 
+echo "sudo ip route $cmd 133.1.0.0/24 via $VM_IP"
+sudo ip route $cmd 133.1.0.0/24 via $VM_IP
+
+echo "sudo ip route $cmd 10.0.8.0/24 via $VM_IP"
+sudo ip route $cmd 10.0.8.0/24 via $VM_IP
+
 echo "Rutas modificadas."
 
 exit 0
