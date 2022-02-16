@@ -41,6 +41,9 @@ Vagrant.configure("2") do |config|
     trigger.run= {inline: "bash routes.sh --del"}
   end
 
+  ## Copiamos archivos auxiliares 
+  config.vm.provision "file", source: "./aux", destination: "$HOME/aux"
+
   config.vm.provision "shell", inline: <<-SHELL
     apt-get update
     apt-get -y upgrade
@@ -48,6 +51,7 @@ Vagrant.configure("2") do |config|
     export DEBIAN_FRONTEND=noninteractive; apt-get -yq install fprobe
     ln -s /usr/local/bin/vcmd /usr/sbin/vcmd
     echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf && sysctl -p
+    /bin/bash /home/vagrant/aux/console_settings.sh
     
     ## Instalacion de FRR, actualmente instala FRR 8.1.0 pero no anda la distribucion de rutas BGP
     #curl -s https://deb.frrouting.org/frr/keys.asc | apt-key add -
@@ -57,9 +61,6 @@ Vagrant.configure("2") do |config|
 
   ## Llevamos la clave publica del usuario a la VM
   config.vm.provision "file", source: "~/.ssh/id_rsa.pub", destination: "~/.ssh/me.pub"
-
-  ## Copiamos archivos auxiliares 
-  config.vm.provision "file", source: "./aux", destination: "$HOME/aux"
 
   config.vm.provision :shell, privileged: false, inline: <<-SHELL
     ## Copiamos la clave publica para poder hacer sshuttle
