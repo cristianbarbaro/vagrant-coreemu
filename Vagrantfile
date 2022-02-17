@@ -51,7 +51,8 @@ Vagrant.configure("2") do |config|
     export DEBIAN_FRONTEND=noninteractive; apt-get -yq install fprobe
     ln -s /usr/local/bin/vcmd /usr/sbin/vcmd
     echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf && sysctl -p
-    /bin/bash /home/vagrant/aux/console_settings.sh
+    cat /home/vagrant/aux/etc_bash.bashrc >> /etc/bash.bashrc
+    cat /home/vagrant/aux/root_.bashrc >> /root/.bashrc
     
     ## Instalacion de FRR, actualmente instala FRR 8.1.0 pero no anda la distribucion de rutas BGP
     #curl -s https://deb.frrouting.org/frr/keys.asc | apt-key add -
