@@ -70,11 +70,8 @@ Vagrant.configure("2") do |config|
     cat /home/vagrant/.ssh/me.pub >> /home/vagrant/.ssh/authorized_keys
     
     ## Descargamos coreemu
-    wget https://github.com/coreemu/core/archive/refs/tags/release-8.0.0.tar.gz
-    tar -xf release-8.0.0.tar.gz && cd core-release-8.0.0
-    
-    ## Copiamos archivo que corrige bug de Core en interfaces RJ45 mencionado en el PR https://github.com/coreemu/core/pull/647
-    cp /home/vagrant/aux/physical.py /home/vagrant/core-release-8.0.0/daemon/core/nodes/physical.py
+    wget https://github.com/coreemu/core/archive/refs/tags/release-8.1.0.tar.gz
+    tar -xf release-8.1.0.tar.gz && cd core-release-8.1.0
     
     ## Instalamos coreemu
     ./setup.sh
