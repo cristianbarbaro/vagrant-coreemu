@@ -53,6 +53,8 @@ Vagrant.configure("2") do |config|
     echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf && sysctl -p
     cat /home/vagrant/aux/etc_bash.bashrc >> /etc/bash.bashrc
     cat /home/vagrant/aux/root_.bashrc >> /root/.bashrc
+    cp /home/vagrant/aux/usr_bin_ccmd /usr/bin/ccmd
+    chmod +x /usr/bin/ccmd
     
     ## Instalacion de FRR, actualmente instala FRR 8.1.0 pero no anda la distribucion de rutas BGP
     #curl -s https://deb.frrouting.org/frr/keys.asc | apt-key add -
