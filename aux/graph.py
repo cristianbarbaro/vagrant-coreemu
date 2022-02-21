@@ -33,21 +33,6 @@ BACKGROUND_COLOR: str = "#cccccc"
 
 
 
-# class AutoScrollbar(tk.Scrollbar):
-#     """ A scrollbar that hides itself if it's not needed. Works only for grid geometry manager """
-#     def set(self, lo, hi):
-#         if float(lo) <= 0.0 and float(hi) >= 1.0:
-#             self.grid_remove()
-#         else:
-#             self.grid()
-#             tk.Scrollbar.set(self, lo, hi)
-
-#     def pack(self, **kw):
-#         raise tk.TclError('Cannot use pack with the widget ' + self.__class__.__name__)
-
-#     def place(self, **kw):
-#         raise tk.TclError('Cannot use place with the widget ' + self.__class__.__name__)
-
 class CanvasGraph(tk.Canvas):
     def __init__(
         self,
@@ -92,22 +77,15 @@ class CanvasGraph(tk.Canvas):
         self.adjust_to_dim: tk.BooleanVar = tk.BooleanVar(value=False)
 
 
+        #### Agregado
         self.draw_method = self.draw_method_void
-
 
         self.last_scrollx_min = 0
         self.last_scrollx_max = 1
         self.last_scrolly_min = 0
         self.last_scrolly_max = 1
-        # hbar = AutoScrollbar(self, orient='horizontal')
-        # vbar = AutoScrollbar(self, orient='vertical')
-        # hbar.grid(row=1, column=0, sticky='we')
-        # vbar.grid(row=0, column=1, sticky='ns')
-        # self.configure(xscrollcommand=hbar.set, yscrollcommand=vbar.set)
-        # self.grid(row=0, column=0, sticky='nswe')
-        # self.update()  # wait till canvas is created
-        # hbar.configure(command=self.__scroll_x)  # bind scrollbars to the canvas
-        # vbar.configure(command=self.__scroll_y)
+        ####
+
 
         # bindings
         self.setup_bindings()
@@ -116,17 +94,7 @@ class CanvasGraph(tk.Canvas):
         self.draw_canvas()
         self.draw_grid()
 
-    # # noinspection PyUnusedLocal
-    # def __scroll_x(self, *args, **kwargs):
-    #     """ Scroll canvas horizontally and redraw the image """
-    #     self.xview(*args)  # scroll horizontally
-    #     self.draw_method()  # redraw the image
 
-    # # noinspection PyUnusedLocal
-    # def __scroll_y(self, *args, **kwargs):
-    #     """ Scroll canvas vertically and redraw the image """
-    #     self.yview(*args)  # scroll vertically
-    #     self.draw_method()  # redraw the image
 
     def draw_canvas(self, dimensions: Tuple[int, int] = None) -> None:
         if self.rect is not None:
@@ -164,7 +132,7 @@ class CanvasGraph(tk.Canvas):
         self.bind("<Button-4>", lambda e: self.zoom(e, ZOOM_IN))
         self.bind("<Button-5>", lambda e: self.zoom(e, ZOOM_OUT))
         self.bind("<ButtonPress-3>", lambda e: self.scan_mark(e.x, e.y))
-        self.bind("<B3-Motion>", lambda e: self.scan_dragto(e.x, e.y, gain=1))
+        self.bind("<B3-Motion>", lambda e: self.scan_dragto_redraw(e.x, e.y, gain=1))
 
     def get_shadow(self, node: CanvasNode) -> ShadowNode:
         shadow_node = self.shadow_core_nodes.get(node.core_node.id)
@@ -192,6 +160,11 @@ class CanvasGraph(tk.Canvas):
         valid_topleft = self.inside_canvas(x1, y1)
         valid_bottomright = self.inside_canvas(x2, y2)
         return valid_topleft and valid_bottomright
+
+    def scan_dragto_redraw(self, *args, **xargs):
+        logger.debug(f'On drag to {args} {xargs}')
+        self.scan_dragto(*args, **xargs)
+        self.draw_method()
 
     def draw_grid(self) -> None:
         """
@@ -587,6 +560,7 @@ class CanvasGraph(tk.Canvas):
             x1, y1, x2, y2 = self.bbox(self.rect)
             x = (x1 + x2) / 2
             y = (y1 + y2) / 2
+        old_id = self.wallpaper_id
         self.wallpaper_id = self.create_image((x, y), image=image, tags=tags.WALLPAPER)
         logger.info(f'wallpaper_id: {self.wallpaper_id}')
         # self.lower(tags.GRIDLINE)
@@ -594,9 +568,10 @@ class CanvasGraph(tk.Canvas):
         # self.tag_lower(tags.GRIDLINE)
         self.tag_lower(self.rect)
         self.wallpaper_drawn = image
+        self.delete(old_id)
 
     def wallpaper_upper_left(self) -> None:
-        self.delete(self.wallpaper_id)
+        # self.delete(self.wallpaper_id)
 
         # # create new scaled image, cropped if needed
         # width, height = self.width_and_height()
@@ -618,7 +593,7 @@ class CanvasGraph(tk.Canvas):
         # y = (cropy / 2) + y1
         # self.draw_wallpaper(image, x, y)
 
-        self.delete(self.wallpaper_id)
+        # self.delete(self.wallpaper_id)
         logger.info('a1')
         # dimension of the cropped image
         width, height = self.width_and_height()
@@ -757,7 +732,7 @@ class CanvasGraph(tk.Canvas):
         """
         place the image at the center of canvas
         """
-        self.delete(self.wallpaper_id)
+        # self.delete(self.wallpaper_id)
         logger.info('a1')
         # dimension of the canvas
         width, height = self.width_and_height()
@@ -862,7 +837,7 @@ class CanvasGraph(tk.Canvas):
 
 
 
-        self.delete(self.wallpaper_id)
+        # self.delete(self.wallpaper_id)
         logger.info('a1')
         # dimension of the canvas
         width, height = self.width_and_height()
