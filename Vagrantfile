@@ -73,6 +73,9 @@ Vagrant.configure("2") do |config|
     wget https://github.com/coreemu/core/archive/refs/tags/release-8.1.0.tar.gz
     tar -xf release-8.1.0.tar.gz && cd core-release-8.1.0
     
+    ## Correccion de wallpapers y zoom sobre python gui
+    cp /home/vagrant/aux/graph.py /home/vagrant/core-release-8.1.0/daemon/core/gui/graph/graph.py
+
     ## Instalamos coreemu
     ./setup.sh
     . ~/.profile
