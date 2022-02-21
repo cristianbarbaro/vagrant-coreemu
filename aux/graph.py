@@ -133,6 +133,10 @@ class CanvasGraph(tk.Canvas):
         self.bind("<Button-5>", lambda e: self.zoom(e, ZOOM_OUT))
         self.bind("<ButtonPress-3>", lambda e: self.scan_mark(e.x, e.y))
         self.bind("<B3-Motion>", lambda e: self.scan_dragto_redraw(e.x, e.y, gain=1))
+        self.bind("<Configure>", self.on_resize)
+
+    def on_resize(self,event):
+        self.draw_method()
 
     def get_shadow(self, node: CanvasNode) -> ShadowNode:
         shadow_node = self.shadow_core_nodes.get(node.core_node.id)
@@ -562,7 +566,7 @@ class CanvasGraph(tk.Canvas):
             y = (y1 + y2) / 2
         old_id = self.wallpaper_id
         self.wallpaper_id = self.create_image((x, y), image=image, tags=tags.WALLPAPER)
-        logger.info(f'wallpaper_id: {self.wallpaper_id}')
+        logger.debug(f'wallpaper_id: {self.wallpaper_id}')
         # self.lower(tags.GRIDLINE)
         self.lower(self.wallpaper_id)
         # self.tag_lower(tags.GRIDLINE)
@@ -594,7 +598,7 @@ class CanvasGraph(tk.Canvas):
         # self.draw_wallpaper(image, x, y)
 
         # self.delete(self.wallpaper_id)
-        logger.info('a1')
+        logger.debug('a1')
         # dimension of the cropped image
         width, height = self.width_and_height()
         w1 = width / self.wallpaper.width
@@ -603,21 +607,21 @@ class CanvasGraph(tk.Canvas):
             rel = height / width
             nw = self.wallpaper.width
             nh = self.wallpaper.width * rel
-            logger.info(f'rel w1: {nw} {nh}')
+            logger.debug(f'rel w1: {nw} {nh}')
         else:
             rel = width / height
             nh = self.wallpaper.height
             nw = self.wallpaper.height * rel
-            logger.info(f'rel h1: {nw} {nh}')
+            logger.debug(f'rel h1: {nw} {nh}')
 
         image = self.wallpaper.crop((0,0,int(nw), int(nh)))
-        logger.info(f'image: {image.width} {image.height}')
-        logger.info(f'canvas width_and_height: {self.coords(self.rect)}')
-        logger.info(f'canvas width_and_height: {width} {height}')
-        logger.info('aaa1')
+        logger.debug(f'image: {image.width} {image.height}')
+        logger.debug(f'canvas width_and_height: {self.coords(self.rect)}')
+        logger.debug(f'canvas width_and_height: {width} {height}')
+        logger.debug('aaa1')
 
         rw, rh = self.get_wallpaper_ratio_size()
-        logger.info(f'get_wallpaper_ratio_size: {rw} {rh}')
+        logger.debug(f'get_wallpaper_ratio_size: {rw} {rh}')
 
         visible = (self.canvasx(0),  # get visible area of the canvas
                       self.canvasy(0),
@@ -625,18 +629,18 @@ class CanvasGraph(tk.Canvas):
                       self.canvasy(self.winfo_height()))
         visible_width = abs(visible[0] - visible[2])
         visible_height = abs(visible[1] - visible[3])
-        logger.info(f'visible: {visible}')
-        logger.info(f'visible size: {visible_width} {visible_height}')
+        logger.debug(f'visible: {visible}')
+        logger.debug(f'visible size: {visible_width} {visible_height}')
 
         box_image = self.coords(self.rect)
-        logger.info(f'box_image: {box_image}')
+        logger.debug(f'box_image: {box_image}')
 
 
-        logger.info('a2')
-        logger.info(f'ratio {self.ratio}')
+        logger.debug('a2')
+        logger.debug(f'ratio {self.ratio}')
         cropx_size = min(visible_width, width) 
         cropy_size = min(visible_height, height) 
-        logger.info(f'cropx_size {cropx_size} cropy_size {cropy_size} ratio {cropx_size/cropy_size}')
+        logger.debug(f'cropx_size {cropx_size} cropy_size {cropy_size} ratio {cropx_size/cropy_size}')
 
         box_canvas = visible
         box_image = box_image
@@ -645,40 +649,40 @@ class CanvasGraph(tk.Canvas):
         x2 = min(box_canvas[2], box_image[2]) - box_image[0]
         y2 = min(box_canvas[3], box_image[3]) - box_image[1]
 
-        logger.info(f'no crop: x1: {x1}, x2 {x2} | y1: {y1} y2: {y2}')
+        logger.debug(f'no crop: x1: {x1}, x2 {x2} | y1: {y1} y2: {y2}')
 
         final_size_x1 = max(box_canvas[0], box_image[0])
         final_size_y1 = max(box_canvas[1], box_image[1])
         final_size_x2 = min(box_canvas[2], box_image[2])
         final_size_y2 = min(box_canvas[3], box_image[3])
-        logger.info(f'final size: x1 {final_size_x1}, y1 {final_size_y1}, x2 {final_size_x2}, y2 {final_size_y2}')
+        logger.debug(f'final size: x1 {final_size_x1}, y1 {final_size_y1}, x2 {final_size_x2}, y2 {final_size_y2}')
 
         final_size_width = abs(final_size_x1 - final_size_x2)
         final_size_height = abs(final_size_y1 - final_size_y2)
-        logger.info(f'final size: width {final_size_width}, height {final_size_height}')
+        logger.debug(f'final size: width {final_size_width}, height {final_size_height}')
 
         nx1 = x1 / self.ratio
         nx2 = x2 / self.ratio
         ny1 = y1 / self.ratio
         ny2 = y2 / self.ratio
 
-        logger.info(f"cropping: nx1: {nx1}, nx2 {nx2} | ny1: {ny1} ny2: {ny2} | relation: {(nx2-nx1)/(ny2-ny1)}")
-        logger.info('a3')
+        logger.debug(f"cropping: nx1: {nx1}, nx2 {nx2} | ny1: {ny1} ny2: {ny2} | relation: {(nx2-nx1)/(ny2-ny1)}")
+        logger.debug('a3')
         cropped = image.crop((nx1, ny1, nx2, ny2))
 
-        logger.info(f"cropped: {cropped.width}, {cropped.height}")
+        logger.debug(f"cropped: {cropped.width}, {cropped.height}")
         
         resized = cropped.resize((int(x2-x1), int(y2-y1)), Image.ANTIALIAS)
-        logger.info(f"resized: {resized.width}, {resized.height}")
+        logger.debug(f"resized: {resized.width}, {resized.height}")
         image = PhotoImage(resized)
-        logger.info('a4')
-        logger.info(image)
-        logger.info('a5')
+        logger.debug('a4')
+        logger.debug(image)
+        logger.debug('a5')
         posx = max(visible[0], box_image[0])
         posy = max(visible[1], box_image[1])
         self.draw_wallpaper(image, posx+(final_size_width/2), posy+(final_size_height/2))
         # self.draw_wallpaper(image)
-        logger.info('a6')
+        logger.debug('a6')
 
 
     def translate(self, value, leftMin, leftMax, rightMin, rightMax):
@@ -693,37 +697,37 @@ class CanvasGraph(tk.Canvas):
         return rightMin + (valueScaled * rightSpan)
     
     def handle_scrollbarx(self, pos_min, pos_max):
-        logger.info(f"{pos_min} {pos_max}")
+        logger.debug(f"{pos_min} {pos_max}")
         if self.last_scrollx_min != pos_min or self.last_scrollx_max != pos_max or (float(pos_min) == 0.0 and float(pos_max) == 1.0):
             self.draw_method()
         self.last_scrollx_min = pos_min
         self.last_scrollx_max = pos_max
         # self.xview_moveto(pos_min)
-        logger.info(f'xview_scroll: {self.xview_scroll}')
-        # logger.info(self.yview_scroll(-1 * (event.delta // 240), "units"))
+        logger.debug(f'xview_scroll: {self.xview_scroll}')
+        # logger.debug(self.yview_scroll(-1 * (event.delta // 240), "units"))
         # self.draw_method()
 
     def handle_scrollbary(self, pos_min, pos_max):
-        logger.info(f"{pos_min} {pos_max}")
+        logger.debug(f"{pos_min} {pos_max}")
         if self.last_scrolly_min != pos_min or self.last_scrolly_max != pos_max or (float(pos_min) == 0.0 and float(pos_max) == 1.0):
             self.draw_method()
         self.last_scrolly_min = pos_min
         self.last_scrolly_max = pos_max
         # self.yview_moveto(pos_min)
-        logger.info(f'yview_scroll: {self.yview_scroll}')
-        # logger.info(self.yview_scroll(-1 * (event.delta // 240), "units"))
+        logger.debug(f'yview_scroll: {self.yview_scroll}')
+        # logger.debug(self.yview_scroll(-1 * (event.delta // 240), "units"))
         # self.draw_method()
 
     def xview(self, *args, **xargs):
-        logger.info(f'{args} {xargs}')
-        logger.info('EEEEEN xview GATO\n\n\n\n')
+        logger.debug(f'{args} {xargs}')
+        logger.debug('EEEEEN xview GATO\n\n\n\n')
         super().xview(*args, **xargs)
         self.draw_method()
         # self.handle_scrollbarx()
 
     def yview(self, *args, **xargs):
-        logger.info(f'{args} {xargs}')
-        logger.info('EEEEEN YVIEW GATO\n\n\n\n')
+        logger.debug(f'{args} {xargs}')
+        logger.debug('EEEEEN YVIEW GATO\n\n\n\n')
         super().yview(*args, **xargs)
         self.draw_method()
         # self.handle_scrollbary()
@@ -733,7 +737,7 @@ class CanvasGraph(tk.Canvas):
         place the image at the center of canvas
         """
         # self.delete(self.wallpaper_id)
-        logger.info('a1')
+        logger.debug('a1')
         # dimension of the canvas
         width, height = self.width_and_height()
 
@@ -747,21 +751,21 @@ class CanvasGraph(tk.Canvas):
             rel = height / width
             nw = self.wallpaper.width
             nh = self.wallpaper.width * rel
-            logger.info(f'rel w1: {nw} {nh}')
+            logger.debug(f'rel w1: {nw} {nh}')
         else:
             rel = width / height
             nh = self.wallpaper.height
             nw = self.wallpaper.height * rel
-            logger.info(f'rel h1: {nw} {nh}')
+            logger.debug(f'rel h1: {nw} {nh}')
 
         image = self.wallpaper ##.crop((0,0,int(nw), int(nh)))
-        logger.info(f'image: {image.width} {image.height}')
-        logger.info(f'canvas width_and_height: {self.coords(self.rect)}')
-        logger.info(f'canvas width_and_height: {width} {height}')
-        logger.info('aaa1')
+        logger.debug(f'image: {image.width} {image.height}')
+        logger.debug(f'canvas width_and_height: {self.coords(self.rect)}')
+        logger.debug(f'canvas width_and_height: {width} {height}')
+        logger.debug('aaa1')
 
         rw, rh = self.get_wallpaper_ratio_size()
-        logger.info(f'get_wallpaper_ratio_size: {rw} {rh}')
+        logger.debug(f'get_wallpaper_ratio_size: {rw} {rh}')
 
         visible = (self.canvasx(0),  # get visible area of the canvas
                       self.canvasy(0),
@@ -769,18 +773,18 @@ class CanvasGraph(tk.Canvas):
                       self.canvasy(self.winfo_height()))
         visible_width = abs(visible[0] - visible[2])
         visible_height = abs(visible[1] - visible[3])
-        logger.info(f'visible: {visible}')
-        logger.info(f'visible size: {visible_width} {visible_height}')
+        logger.debug(f'visible: {visible}')
+        logger.debug(f'visible size: {visible_width} {visible_height}')
 
         box_image = self.coords(self.rect)
-        logger.info(f'box_image: {box_image}')
+        logger.debug(f'box_image: {box_image}')
 
 
-        logger.info('a2')
-        logger.info(f'ratio {self.ratio}')
+        logger.debug('a2')
+        logger.debug(f'ratio {self.ratio}')
         cropx_size = min(visible_width, width) 
         cropy_size = min(visible_height, height) 
-        logger.info(f'cropx_size {cropx_size} cropy_size {cropy_size} ratio {cropx_size/cropy_size}')
+        logger.debug(f'cropx_size {cropx_size} cropy_size {cropy_size} ratio {cropx_size/cropy_size}')
 
         box_canvas = visible
         box_image = box_image
@@ -789,40 +793,40 @@ class CanvasGraph(tk.Canvas):
         x2 = min(box_canvas[2], box_image[2]) - box_image[0]
         y2 = min(box_canvas[3], box_image[3]) - box_image[1]
 
-        logger.info(f'no crop: x1: {x1}, x2 {x2} | y1: {y1} y2: {y2}')
+        logger.debug(f'no crop: x1: {x1}, x2 {x2} | y1: {y1} y2: {y2}')
 
         final_size_x1 = max(box_canvas[0], box_image[0])
         final_size_y1 = max(box_canvas[1], box_image[1])
         final_size_x2 = min(box_canvas[2], box_image[2])
         final_size_y2 = min(box_canvas[3], box_image[3])
-        logger.info(f'final size: x1 {final_size_x1}, y1 {final_size_y1}, x2 {final_size_x2}, y2 {final_size_y2}')
+        logger.debug(f'final size: x1 {final_size_x1}, y1 {final_size_y1}, x2 {final_size_x2}, y2 {final_size_y2}')
 
         final_size_width = abs(final_size_x1 - final_size_x2)
         final_size_height = abs(final_size_y1 - final_size_y2)
-        logger.info(f'final size: width {final_size_width}, height {final_size_height}')
+        logger.debug(f'final size: width {final_size_width}, height {final_size_height}')
 
         nx1 = x1 / self.ratio + centerx
         nx2 = x2 / self.ratio + centerx
         ny1 = y1 / self.ratio + centery
         ny2 = y2 / self.ratio + centery
 
-        logger.info(f"cropping: nx1: {nx1}, nx2 {nx2} | ny1: {ny1} ny2: {ny2} | relation: {(nx2-nx1)/(ny2-ny1)}")
-        logger.info('a3')
+        logger.debug(f"cropping: nx1: {nx1}, nx2 {nx2} | ny1: {ny1} ny2: {ny2} | relation: {(nx2-nx1)/(ny2-ny1)}")
+        logger.debug('a3')
         cropped = image.crop((nx1, ny1, nx2, ny2))
 
-        logger.info(f"cropped: {cropped.width}, {cropped.height}")
+        logger.debug(f"cropped: {cropped.width}, {cropped.height}")
         
         resized = cropped.resize((int(x2-x1), int(y2-y1)), Image.ANTIALIAS)
-        logger.info(f"resized: {resized.width}, {resized.height}")
+        logger.debug(f"resized: {resized.width}, {resized.height}")
         image = PhotoImage(resized)
-        logger.info('a4')
-        logger.info(image)
-        logger.info('a5')
+        logger.debug('a4')
+        logger.debug(image)
+        logger.debug('a5')
         posx = max(visible[0], box_image[0])
         posy = max(visible[1], box_image[1])
         self.draw_wallpaper(image, posx+(final_size_width/2), posy+(final_size_height/2))
         # self.draw_wallpaper(image)
-        logger.info('a6')
+        logger.debug('a6')
 
 
     def wallpaper_scaled(self) -> None:
@@ -838,7 +842,7 @@ class CanvasGraph(tk.Canvas):
 
 
         # self.delete(self.wallpaper_id)
-        logger.info('a1')
+        logger.debug('a1')
         # dimension of the canvas
         width, height = self.width_and_height()
 
@@ -849,21 +853,21 @@ class CanvasGraph(tk.Canvas):
             rel = height / width
             nw = self.wallpaper.width
             nh = self.wallpaper.width * rel
-            logger.info(f'rel w1: {nw} {nh}')
+            logger.debug(f'rel w1: {nw} {nh}')
         else:
             rel = width / height
             nh = self.wallpaper.height
             nw = self.wallpaper.height * rel
-            logger.info(f'rel h1: {nw} {nh}')
+            logger.debug(f'rel h1: {nw} {nh}')
 
         image = self.wallpaper
-        logger.info(f'image: {image.width} {image.height}')
-        logger.info(f'canvas width_and_height: {self.coords(self.rect)}')
-        logger.info(f'canvas width_and_height: {width} {height}')
-        logger.info('aaa1')
+        logger.debug(f'image: {image.width} {image.height}')
+        logger.debug(f'canvas width_and_height: {self.coords(self.rect)}')
+        logger.debug(f'canvas width_and_height: {width} {height}')
+        logger.debug('aaa1')
 
         rw, rh = self.get_wallpaper_ratio_size()
-        logger.info(f'get_wallpaper_ratio_size: {rw} {rh}')
+        logger.debug(f'get_wallpaper_ratio_size: {rw} {rh}')
 
         visible = (self.canvasx(0),  # get visible area of the canvas
                       self.canvasy(0),
@@ -871,18 +875,18 @@ class CanvasGraph(tk.Canvas):
                       self.canvasy(self.winfo_height()))
         visible_width = abs(visible[0] - visible[2])
         visible_height = abs(visible[1] - visible[3])
-        logger.info(f'visible: {visible}')
-        logger.info(f'visible size: {visible_width} {visible_height}')
+        logger.debug(f'visible: {visible}')
+        logger.debug(f'visible size: {visible_width} {visible_height}')
 
         box_image = self.coords(self.rect)
-        logger.info(f'box_image: {box_image}')
+        logger.debug(f'box_image: {box_image}')
 
 
-        logger.info('a2')
-        logger.info(f'ratio {self.ratio}')
+        logger.debug('a2')
+        logger.debug(f'ratio {self.ratio}')
         cropx_size = min(visible_width, width) 
         cropy_size = min(visible_height, height) 
-        logger.info(f'cropx_size {cropx_size} cropy_size {cropy_size} ratio {cropx_size/cropy_size}')
+        logger.debug(f'cropx_size {cropx_size} cropy_size {cropy_size} ratio {cropx_size/cropy_size}')
 
         box_canvas = visible
         box_image = box_image
@@ -891,48 +895,48 @@ class CanvasGraph(tk.Canvas):
         x2 = min(box_canvas[2], box_image[2]) - box_image[0]
         y2 = min(box_canvas[3], box_image[3]) - box_image[1]
 
-        logger.info(f'no crop: x1: {x1}, x2 {x2} | y1: {y1} y2: {y2}')
+        logger.debug(f'no crop: x1: {x1}, x2 {x2} | y1: {y1} y2: {y2}')
 
         final_size_x1 = max(box_canvas[0], box_image[0])
         final_size_y1 = max(box_canvas[1], box_image[1])
         final_size_x2 = min(box_canvas[2], box_image[2])
         final_size_y2 = min(box_canvas[3], box_image[3])
-        logger.info(f'final size: x1 {final_size_x1}, y1 {final_size_y1}, x2 {final_size_x2}, y2 {final_size_y2}')
+        logger.debug(f'final size: x1 {final_size_x1}, y1 {final_size_y1}, x2 {final_size_x2}, y2 {final_size_y2}')
 
         final_size_width = abs(final_size_x1 - final_size_x2)
         final_size_height = abs(final_size_y1 - final_size_y2)
-        logger.info(f'final size: width {final_size_width}, height {final_size_height}')
+        logger.debug(f'final size: width {final_size_width}, height {final_size_height}')
 
         nx1 = x1 / self.ratio
         nx2 = x2 / self.ratio
         ny1 = y1 / self.ratio
         ny2 = y2 / self.ratio
 
-        logger.info(f"cropping: nx1: {nx1}, nx2 {nx2} | ny1: {ny1} ny2: {ny2} | relation: {(nx2-nx1)/(ny2-ny1)}")
-        logger.info('a3')
+        logger.debug(f"cropping: nx1: {nx1}, nx2 {nx2} | ny1: {ny1} ny2: {ny2} | relation: {(nx2-nx1)/(ny2-ny1)}")
+        logger.debug('a3')
 
         ## scaled crop
         nx1 = self.translate(nx1,0,width/self.ratio,0,self.wallpaper.width)
         nx2 = self.translate(nx2,0,width/self.ratio,0,self.wallpaper.width)
         ny1 = self.translate(ny1,0,height/self.ratio,0,self.wallpaper.height)
         ny2 = self.translate(ny2,0,height/self.ratio,0,self.wallpaper.height)
-        logger.info(f"translate cropping: nx1: {nx1}, nx2 {nx2} | ny1: {ny1} ny2: {ny2} | relation: {(nx2-nx1)/(ny2-ny1)}")
+        logger.debug(f"translate cropping: nx1: {nx1}, nx2 {nx2} | ny1: {ny1} ny2: {ny2} | relation: {(nx2-nx1)/(ny2-ny1)}")
 
         cropped = image.crop((nx1, ny1, nx2, ny2))
 
-        logger.info(f"cropped: {cropped.width}, {cropped.height}")
+        logger.debug(f"cropped: {cropped.width}, {cropped.height}")
         
         resized = cropped.resize((int(x2-x1), int(y2-y1)), Image.ANTIALIAS)
-        logger.info(f"resized: {resized.width}, {resized.height}")
+        logger.debug(f"resized: {resized.width}, {resized.height}")
         image = PhotoImage(resized)
-        logger.info('a4')
-        logger.info(image)
-        logger.info('a5')
+        logger.debug('a4')
+        logger.debug(image)
+        logger.debug('a5')
         posx = max(visible[0], box_image[0])
         posy = max(visible[1], box_image[1])
         self.draw_wallpaper(image, posx+(final_size_width/2), posy+(final_size_height/2))
         # self.draw_wallpaper(image)
-        logger.info('a6')
+        logger.debug('a6')
 
 
     def resize_to_wallpaper(self) -> None:
@@ -1002,7 +1006,7 @@ class CanvasGraph(tk.Canvas):
         return img
 
     def set_wallpaper(self, filename: Optional[str]) -> None:
-        logger.info("setting canvas(%s) background: %s", self.id, filename)
+        logger.debug("setting canvas(%s) background: %s", self.id, filename)
         if filename:
             img = Image.open(filename)
             self.wallpaper = self.prepare_img(img)
@@ -1202,7 +1206,7 @@ class CanvasGraph(tk.Canvas):
             wallpaper = Path(wallpaper)
             if not wallpaper.is_file():
                 wallpaper = appconfig.BACKGROUNDS_PATH.joinpath(wallpaper)
-            logger.info("canvas(%s), wallpaper: %s", self.id, wallpaper)
+            logger.debug("canvas(%s), wallpaper: %s", self.id, wallpaper)
             if wallpaper.is_file():
                 self.set_wallpaper(str(wallpaper))
             else:
