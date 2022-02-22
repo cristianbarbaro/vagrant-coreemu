@@ -1241,7 +1241,7 @@ class CanvasGraph(tk.Canvas):
         fit_image = config.get("fit_image", False)
         self.adjust_to_dim.set(fit_image)
         wallpaper_style = config.get("wallpaper_style", 1)
-        self.scale_option.set(wallpaper_style)s
+        self.scale_option.set(wallpaper_style)
         dimensions = config.get("dimensions")
         if dimensions:
             self.redraw_canvas(dimensions)
