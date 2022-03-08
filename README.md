@@ -1,37 +1,37 @@
 # Instrucciones:
 
-### Instalar Virtualbox y Vagrant 
-
-* https://www.virtualbox.org/wiki/Downloads
-* https://www.vagrantup.com/downloads
-
 ### Creación de la VM y configuración:
 
-* Ejecutar el siguiente comando para clonar el repositorio:
-    * `git clone <link-repo.git>`
-
-* Entrar a la carpeta del repositorio:
-    * `cd vagrant-coreemu`
-
-### Iniciar la VM (la primera vez la descarga e instala):
-
-* Pararse een el directorio del repositorio y ejecutar el siguiente comando:
-
+* Ejecutar el siguiente comando para crear la VM:
     * `vagrant up`
 
-### Entrar a la VM:
 
-* Al terminar de instalar abrira el login con el usuario Ubuntu, hacer click y cambiarlo por el usuario `vagrant`
-    * User: `vagrant`
-    * Password: `vagrant`
+### Acceso a la VM:
 
-### Para apagarla:
+* Ejecutar el siguiente comando para ingresar a la VM por SSH y ***forwardear*** las X (la opción `-vvv` es para debugear, puede omitirse del comando):
 
-* Ejecutar el comando `vagrant halt`
+    * `vagrant ssh -- -vvv -X` 
+    o 
+    * `vagrant ssh -- -X`
 
-### Exportar OVA:
+* Ejecutar CORE dentro de la VM:
+    * `core-gui-legacy`
 
-* Ir al VirtualBox
-* Seleccionar la VM de `pythonvm`
-* Ir al menu superior `Archivo` y seleccionar `Exportar Servicio Virtualizado...`
+#### Si hay problemas al crear la interfaz hostonly:
 
+```
+==> default: Clearing any previously set network interfaces...
+There was an error while executing `VBoxManage`, a CLI used by Vagrant
+for controlling VirtualBox. The command and stderr is shown below.
+
+Command: ["hostonlyif", "ipconfig", "vboxnet0", "--ip", "192.168.100.1", "--netmask", "255.255.255.0"]
+
+Stderr: VBoxManage: error: Code E_ACCESSDENIED (0x80070005) - Access denied (extended info not available)
+VBoxManage: error: Context: "EnableStaticIPConfig(Bstr(pszIp).raw(), Bstr(pszNetmask).raw())" at line 242 of file VBoxManageHostonly.cpp
+```
+
+* Crear/editar archivo /etc/vbox/networks.conf que contiene las redes disponibles para vagrant y aplicar el siguiente contenido:
+
+```
+* 0.0.0.0/0 ::/0
+```
