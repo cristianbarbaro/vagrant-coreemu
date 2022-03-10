@@ -2,7 +2,7 @@ import logging
 import tkinter as tk
 from copy import deepcopy
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Callable
 
 from PIL import Image
 from PIL.ImageTk import PhotoImage
@@ -30,7 +30,6 @@ ZOOM_OUT: float = 0.9
 MOVE_NODE_MODES: Set[GraphMode] = {GraphMode.NODE, GraphMode.SELECT}
 MOVE_SHAPE_MODES: Set[GraphMode] = {GraphMode.ANNOTATION, GraphMode.SELECT}
 BACKGROUND_COLOR: str = "#cccccc"
-
 
 
 class CanvasGraph(tk.Canvas):
@@ -76,16 +75,12 @@ class CanvasGraph(tk.Canvas):
         self.scale_option: tk.IntVar = tk.IntVar(value=1)
         self.adjust_to_dim: tk.BooleanVar = tk.BooleanVar(value=False)
 
-
-        #### Agregado
-        self.draw_method = self.draw_method_void
-
-        self.last_scrollx_min = 0
-        self.last_scrollx_max = 1
-        self.last_scrolly_min = 0
-        self.last_scrolly_max = 1
-        ####
-
+        # background wallpaper drawing
+        self.draw_method: Callable = self.draw_method_void
+        self.last_scrollx_min: int = 0
+        self.last_scrollx_max: int = 1
+        self.last_scrolly_min: int = 0
+        self.last_scrolly_max: int = 1
 
         # bindings
         self.setup_bindings()
@@ -93,8 +88,6 @@ class CanvasGraph(tk.Canvas):
         # draw base canvas
         self.draw_canvas()
         self.draw_grid()
-
-
 
     def draw_canvas(self, dimensions: Tuple[int, int] = None) -> None:
         if self.rect is not None:
@@ -136,7 +129,7 @@ class CanvasGraph(tk.Canvas):
         self.bind("<Configure>", self.on_resize)
 
     def on_resize(self,event):
-        self.draw_method()
+        self.redraw()
 
     def get_shadow(self, node: CanvasNode) -> ShadowNode:
         shadow_node = self.shadow_core_nodes.get(node.core_node.id)
@@ -168,7 +161,7 @@ class CanvasGraph(tk.Canvas):
     def scan_dragto_redraw(self, *args, **xargs):
         logger.debug(f'On drag to {args} {xargs}')
         self.scan_dragto(*args, **xargs)
-        self.draw_method()
+        self.redraw()
 
     def draw_grid(self) -> None:
         """
@@ -365,7 +358,11 @@ class CanvasGraph(tk.Canvas):
         logger.debug("offset: %s", self.offset)
         self.app.statusbar.set_zoom(self.ratio)
         if self.wallpaper:
-            self.draw_method()
+            # redraw all: wallpaper, nodes and edges
+            self.redraw()
+        else:
+            # redraw only nodes and edges
+            self.redraw_nodes()
 
     def click_press(self, event: tk.Event) -> None:
         """
@@ -566,40 +563,43 @@ class CanvasGraph(tk.Canvas):
             y = (y1 + y2) / 2
         old_id = self.wallpaper_id
         self.wallpaper_id = self.create_image((x, y), image=image, tags=tags.WALLPAPER)
-        logger.debug(f'wallpaper_id: {self.wallpaper_id}')
-        # self.lower(tags.GRIDLINE)
         self.lower(self.wallpaper_id)
-        # self.tag_lower(tags.GRIDLINE)
         self.tag_lower(self.rect)
         self.wallpaper_drawn = image
         self.delete(old_id)
 
+    def translate(self, value, leftMin, leftMax, rightMin, rightMax):
+        # Figure out how 'wide' each range is
+        leftSpan = leftMax - leftMin
+        rightSpan = rightMax - rightMin
+
+        # Convert the left range into a 0-1 range (float)
+        valueScaled = float(value - leftMin) / float(leftSpan)
+
+        # Convert the 0-1 range into a value in the right range.
+        return rightMin + (valueScaled * rightSpan)
+    
+    def handle_scrollbarx(self, pos_min, pos_max):
+        if self.last_scrollx_min != pos_min or self.last_scrollx_max != pos_max or (float(pos_min) == 0.0 and float(pos_max) == 1.0):
+            self.redraw()
+        self.last_scrollx_min = pos_min
+        self.last_scrollx_max = pos_max
+
+    def handle_scrollbary(self, pos_min, pos_max):
+        if self.last_scrolly_min != pos_min or self.last_scrolly_max != pos_max or (float(pos_min) == 0.0 and float(pos_max) == 1.0):
+            self.redraw()
+        self.last_scrolly_min = pos_min
+        self.last_scrolly_max = pos_max
+
+    def xview(self, *args, **xargs):
+        super().xview(*args, **xargs)
+        self.redraw()
+
+    def yview(self, *args, **xargs):
+        super().yview(*args, **xargs)
+        self.redraw()
+
     def wallpaper_upper_left(self) -> None:
-        # self.delete(self.wallpaper_id)
-
-        # # create new scaled image, cropped if needed
-        # width, height = self.width_and_height()
-        # # image = self.get_wallpaper_image()
-        # rw, rh = self.get_wallpaper_ratio_size()
-        # image = self.wallpaper.resize((self.wallpaper.width, self.wallpaper.height), Image.ANTIALIAS)
-        # cropx = image.width
-        # cropy = image.height
-        # if image.width > width:
-        #     cropx = image.width
-        # if image.height > height:
-        #     cropy = image.height
-        # cropped = image.crop((0, 0, cropx, cropy))
-        # image = PhotoImage(cropped)
-
-        # # draw on canvas
-        # x1, y1, _, _ = self.bbox(self.rect)
-        # x = (cropx / 2) + x1
-        # y = (cropy / 2) + y1
-        # self.draw_wallpaper(image, x, y)
-
-        # self.delete(self.wallpaper_id)
-        logger.debug('a1')
-        # dimension of the cropped image
         width, height = self.width_and_height()
         w1 = width / self.wallpaper.width
         h1 = height / self.wallpaper.height
@@ -618,7 +618,6 @@ class CanvasGraph(tk.Canvas):
         logger.debug(f'image: {image.width} {image.height}')
         logger.debug(f'canvas width_and_height: {self.coords(self.rect)}')
         logger.debug(f'canvas width_and_height: {width} {height}')
-        logger.debug('aaa1')
 
         rw, rh = self.get_wallpaper_ratio_size()
         logger.debug(f'get_wallpaper_ratio_size: {rw} {rh}')
@@ -634,10 +633,8 @@ class CanvasGraph(tk.Canvas):
 
         box_image = self.coords(self.rect)
         logger.debug(f'box_image: {box_image}')
-
-
-        logger.debug('a2')
         logger.debug(f'ratio {self.ratio}')
+
         cropx_size = min(visible_width, width) 
         cropy_size = min(visible_height, height) 
         logger.debug(f'cropx_size {cropx_size} cropy_size {cropy_size} ratio {cropx_size/cropy_size}')
@@ -665,86 +662,29 @@ class CanvasGraph(tk.Canvas):
         nx2 = x2 / self.ratio
         ny1 = y1 / self.ratio
         ny2 = y2 / self.ratio
-
         logger.debug(f"cropping: nx1: {nx1}, nx2 {nx2} | ny1: {ny1} ny2: {ny2} | relation: {(nx2-nx1)/(ny2-ny1)}")
-        logger.debug('a3')
-        cropped = image.crop((nx1, ny1, nx2, ny2))
 
+        cropped = image.crop((nx1, ny1, nx2, ny2))
         logger.debug(f"cropped: {cropped.width}, {cropped.height}")
         
         resized = cropped.resize((int(x2-x1), int(y2-y1)), Image.ANTIALIAS)
         logger.debug(f"resized: {resized.width}, {resized.height}")
+        
         image = PhotoImage(resized)
-        logger.debug('a4')
-        logger.debug(image)
-        logger.debug('a5')
         posx = max(visible[0], box_image[0])
         posy = max(visible[1], box_image[1])
         self.draw_wallpaper(image, posx+(final_size_width/2), posy+(final_size_height/2))
-        # self.draw_wallpaper(image)
-        logger.debug('a6')
-
-
-    def translate(self, value, leftMin, leftMax, rightMin, rightMax):
-        # Figure out how 'wide' each range is
-        leftSpan = leftMax - leftMin
-        rightSpan = rightMax - rightMin
-
-        # Convert the left range into a 0-1 range (float)
-        valueScaled = float(value - leftMin) / float(leftSpan)
-
-        # Convert the 0-1 range into a value in the right range.
-        return rightMin + (valueScaled * rightSpan)
-    
-    def handle_scrollbarx(self, pos_min, pos_max):
-        logger.debug(f"{pos_min} {pos_max}")
-        if self.last_scrollx_min != pos_min or self.last_scrollx_max != pos_max or (float(pos_min) == 0.0 and float(pos_max) == 1.0):
-            self.draw_method()
-        self.last_scrollx_min = pos_min
-        self.last_scrollx_max = pos_max
-        # self.xview_moveto(pos_min)
-        logger.debug(f'xview_scroll: {self.xview_scroll}')
-        # logger.debug(self.yview_scroll(-1 * (event.delta // 240), "units"))
-        # self.draw_method()
-
-    def handle_scrollbary(self, pos_min, pos_max):
-        logger.debug(f"{pos_min} {pos_max}")
-        if self.last_scrolly_min != pos_min or self.last_scrolly_max != pos_max or (float(pos_min) == 0.0 and float(pos_max) == 1.0):
-            self.draw_method()
-        self.last_scrolly_min = pos_min
-        self.last_scrolly_max = pos_max
-        # self.yview_moveto(pos_min)
-        logger.debug(f'yview_scroll: {self.yview_scroll}')
-        # logger.debug(self.yview_scroll(-1 * (event.delta // 240), "units"))
-        # self.draw_method()
-
-    def xview(self, *args, **xargs):
-        logger.debug(f'{args} {xargs}')
-        logger.debug('EEEEEN xview GATO\n\n\n\n')
-        super().xview(*args, **xargs)
-        self.draw_method()
-        # self.handle_scrollbarx()
-
-    def yview(self, *args, **xargs):
-        logger.debug(f'{args} {xargs}')
-        logger.debug('EEEEEN YVIEW GATO\n\n\n\n')
-        super().yview(*args, **xargs)
-        self.draw_method()
-        # self.handle_scrollbary()
 
     def wallpaper_center(self) -> None:
         """
         place the image at the center of canvas
         """
-        # self.delete(self.wallpaper_id)
-        logger.debug('a1')
         # dimension of the canvas
         width, height = self.width_and_height()
 
         centerx = (self.wallpaper.width - (width/self.ratio)) / 2
         centery = (self.wallpaper.height - (height/self.ratio)) / 2
         
-
         w1 = width / self.wallpaper.width
         h1 = height / self.wallpaper.height
         if w1 > h1:
@@ -758,11 +698,10 @@ class CanvasGraph(tk.Canvas):
             nw = self.wallpaper.height * rel
             logger.debug(f'rel h1: {nw} {nh}')
 
-        image = self.wallpaper ##.crop((0,0,int(nw), int(nh)))
+        image = self.wallpaper
         logger.debug(f'image: {image.width} {image.height}')
         logger.debug(f'canvas width_and_height: {self.coords(self.rect)}')
         logger.debug(f'canvas width_and_height: {width} {height}')
-        logger.debug('aaa1')
 
         rw, rh = self.get_wallpaper_ratio_size()
         logger.debug(f'get_wallpaper_ratio_size: {rw} {rh}')
@@ -778,10 +717,8 @@ class CanvasGraph(tk.Canvas):
 
         box_image = self.coords(self.rect)
         logger.debug(f'box_image: {box_image}')
-
-
-        logger.debug('a2')
         logger.debug(f'ratio {self.ratio}')
+
         cropx_size = min(visible_width, width) 
         cropy_size = min(visible_height, height) 
         logger.debug(f'cropx_size {cropx_size} cropy_size {cropy_size} ratio {cropx_size/cropy_size}')
@@ -792,7 +729,6 @@ class CanvasGraph(tk.Canvas):
         y1 = max(box_canvas[1] - box_image[1], 0)
         x2 = min(box_canvas[2], box_image[2]) - box_image[0]
         y2 = min(box_canvas[3], box_image[3]) - box_image[1]
-
         logger.debug(f'no crop: x1: {x1}, x2 {x2} | y1: {y1} y2: {y2}')
 
         final_size_x1 = max(box_canvas[0], box_image[0])
@@ -809,43 +745,25 @@ class CanvasGraph(tk.Canvas):
         nx2 = x2 / self.ratio + centerx
         ny1 = y1 / self.ratio + centery
         ny2 = y2 / self.ratio + centery
-
         logger.debug(f"cropping: nx1: {nx1}, nx2 {nx2} | ny1: {ny1} ny2: {ny2} | relation: {(nx2-nx1)/(ny2-ny1)}")
-        logger.debug('a3')
-        cropped = image.crop((nx1, ny1, nx2, ny2))
 
+        cropped = image.crop((nx1, ny1, nx2, ny2))
         logger.debug(f"cropped: {cropped.width}, {cropped.height}")
         
         resized = cropped.resize((int(x2-x1), int(y2-y1)), Image.ANTIALIAS)
         logger.debug(f"resized: {resized.width}, {resized.height}")
+        
         image = PhotoImage(resized)
-        logger.debug('a4')
-        logger.debug(image)
-        logger.debug('a5')
         posx = max(visible[0], box_image[0])
         posy = max(visible[1], box_image[1])
         self.draw_wallpaper(image, posx+(final_size_width/2), posy+(final_size_height/2))
-        # self.draw_wallpaper(image)
-        logger.debug('a6')
-
 
     def wallpaper_scaled(self) -> None:
         """
         scale image based on canvas dimension
         """
-        # self.delete(self.wallpaper_id)
-        # canvas_w, canvas_h = self.width_and_height()
-        # image = self.wallpaper.resize((int(canvas_w), int(canvas_h)), Image.ANTIALIAS)
-        # image = PhotoImage(image)
-        # self.draw_wallpaper(image)
-
-
-
-        # self.delete(self.wallpaper_id)
-        logger.debug('a1')
         # dimension of the canvas
         width, height = self.width_and_height()
-
 
         w1 = width / self.wallpaper.width
         h1 = height / self.wallpaper.height
@@ -864,7 +782,6 @@ class CanvasGraph(tk.Canvas):
         logger.debug(f'image: {image.width} {image.height}')
         logger.debug(f'canvas width_and_height: {self.coords(self.rect)}')
         logger.debug(f'canvas width_and_height: {width} {height}')
-        logger.debug('aaa1')
 
         rw, rh = self.get_wallpaper_ratio_size()
         logger.debug(f'get_wallpaper_ratio_size: {rw} {rh}')
@@ -880,10 +797,8 @@ class CanvasGraph(tk.Canvas):
 
         box_image = self.coords(self.rect)
         logger.debug(f'box_image: {box_image}')
-
-
-        logger.debug('a2')
         logger.debug(f'ratio {self.ratio}')
+
         cropx_size = min(visible_width, width) 
         cropy_size = min(visible_height, height) 
         logger.debug(f'cropx_size {cropx_size} cropy_size {cropy_size} ratio {cropx_size/cropy_size}')
@@ -894,7 +809,6 @@ class CanvasGraph(tk.Canvas):
         y1 = max(box_canvas[1] - box_image[1], 0)
         x2 = min(box_canvas[2], box_image[2]) - box_image[0]
         y2 = min(box_canvas[3], box_image[3]) - box_image[1]
-
         logger.debug(f'no crop: x1: {x1}, x2 {x2} | y1: {y1} y2: {y2}')
 
         final_size_x1 = max(box_canvas[0], box_image[0])
@@ -911,9 +825,7 @@ class CanvasGraph(tk.Canvas):
         nx2 = x2 / self.ratio
         ny1 = y1 / self.ratio
         ny2 = y2 / self.ratio
-
         logger.debug(f"cropping: nx1: {nx1}, nx2 {nx2} | ny1: {ny1} ny2: {ny2} | relation: {(nx2-nx1)/(ny2-ny1)}")
-        logger.debug('a3')
 
         ## scaled crop
         nx1 = self.translate(nx1,0,width/self.ratio,0,self.wallpaper.width)
@@ -923,21 +835,15 @@ class CanvasGraph(tk.Canvas):
         logger.debug(f"translate cropping: nx1: {nx1}, nx2 {nx2} | ny1: {ny1} ny2: {ny2} | relation: {(nx2-nx1)/(ny2-ny1)}")
 
         cropped = image.crop((nx1, ny1, nx2, ny2))
-
         logger.debug(f"cropped: {cropped.width}, {cropped.height}")
         
         resized = cropped.resize((int(x2-x1), int(y2-y1)), Image.ANTIALIAS)
         logger.debug(f"resized: {resized.width}, {resized.height}")
+        
         image = PhotoImage(resized)
-        logger.debug('a4')
-        logger.debug(image)
-        logger.debug('a5')
         posx = max(visible[0], box_image[0])
         posy = max(visible[1], box_image[1])
         self.draw_wallpaper(image, posx+(final_size_width/2), posy+(final_size_height/2))
-        # self.draw_wallpaper(image)
-        logger.debug('a6')
-
 
     def resize_to_wallpaper(self) -> None:
         self.delete(self.wallpaper_id)
@@ -967,26 +873,37 @@ class CanvasGraph(tk.Canvas):
         self.app.manager.show_grid.click_handler()
 
     def draw_method_void(self):
+        """ 
+        Strategy method for drawing the wallpaper. Used by redraw_wallpaper() 
+        """
         pass
+
+    def redraw_nodes(self):
+        for canvas_node in self.nodes.values():
+            canvas_node.redraw()
+
+    def redraw(self):
+        self.draw_method()
+        self.redraw_nodes()
 
     def redraw_wallpaper(self) -> None:
         if self.adjust_to_dim.get():
             logger.debug("drawing wallpaper to canvas dimensions")
             self.resize_to_wallpaper()
             self.draw_method = self.wallpaper_upper_left
-            self.draw_method()
+            self.redraw()
         else:
             option = ScaleOption(self.scale_option.get())
             logger.debug("drawing canvas using scaling option: %s", option)
             if option == ScaleOption.UPPER_LEFT:
                 self.draw_method = self.wallpaper_upper_left
-                self.draw_method()
+                self.redraw()
             elif option == ScaleOption.CENTERED:
                 self.draw_method = self.wallpaper_center
-                self.draw_method()
+                self.redraw()
             elif option == ScaleOption.SCALED:
                 self.draw_method = self.wallpaper_scaled
-                self.draw_method()
+                self.redraw()
             elif option == ScaleOption.TILED:
                 logger.warning("tiled background not implemented yet")
         self.organize()
@@ -995,22 +912,11 @@ class CanvasGraph(tk.Canvas):
         for tag in tags.ORGANIZE_TAGS:
             self.tag_raise(tag)
 
-    def prepare_img(self, img):
-        option = ScaleOption(self.scale_option.get())
-        # if option == ScaleOption.UPPER_LEFT:
-        # elif option == ScaleOption.CENTERED:
-        # if option == ScaleOption.SCALED:
-        #     canvas_w, canvas_h = self.width_and_height()
-        #     print(canvas_w, canvas_h)
-        #     return img.resize((int(canvas_w), int(canvas_h)), Image.ANTIALIAS)
-        return img
-
     def set_wallpaper(self, filename: Optional[str]) -> None:
-        logger.debug("setting canvas(%s) background: %s", self.id, filename)
+        logger.info("setting canvas(%s) background: %s", self.id, filename)
         if filename:
             img = Image.open(filename)
-            self.wallpaper = self.prepare_img(img)
-            print(self.wallpaper.width, self.wallpaper.height)
+            self.wallpaper = img
             self.wallpaper_file = filename
             self.redraw_wallpaper()
         else:
@@ -1206,7 +1112,7 @@ class CanvasGraph(tk.Canvas):
             wallpaper = Path(wallpaper)
             if not wallpaper.is_file():
                 wallpaper = appconfig.BACKGROUNDS_PATH.joinpath(wallpaper)
-            logger.debug("canvas(%s), wallpaper: %s", self.id, wallpaper)
+            logger.info("canvas(%s), wallpaper: %s", self.id, wallpaper)
             if wallpaper.is_file():
                 self.set_wallpaper(str(wallpaper))
             else:
