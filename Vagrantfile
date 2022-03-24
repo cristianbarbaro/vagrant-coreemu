@@ -77,13 +77,13 @@ Vagrant.configure("2") do |config|
     cp /home/vagrant/aux/graph.py /home/vagrant/core-release-8.1.0/daemon/core/gui/graph/graph.py
     cp /home/vagrant/aux/node.py /home/vagrant/core-release-8.1.0/daemon/core/gui/graph/node.py
 
-    # copia archivos
-    cp /home/vagrant/aux/world.png /home/vagrant/.coregui/backgrounds/world.png
-
     ## Instalamos coreemu
     ./setup.sh
     . ~/.profile
     
+    # copia archivos
+    cp /home/vagrant/aux/world.png /home/vagrant/.coregui/backgrounds/world.png
+
     ## Deshabilitamos Quagga porque usamos FRR
     inv install -o --no-ospf
     
