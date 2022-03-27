@@ -83,6 +83,7 @@ Vagrant.configure("2") do |config|
     
     # copia el wallpaper
     mkdir -p "/home/vagrant/.coregui/backgrounds/" && cp /home/vagrant/aux/world.png /home/vagrant/.coregui/backgrounds/world.png
+    mkdir -p "/home/vagrant/.coregui/backgrounds/" && cp /home/vagrant/aux/nasa.png /home/vagrant/.coregui/backgrounds/nasa.png
 
     ## Deshabilitamos Quagga porque usamos FRR
     inv install -o --no-ospf
