@@ -15,7 +15,7 @@
     * `vagrant ssh -- -X`
 
 * Ejecutar CORE dentro de la VM:
-    * `core-gui-legacy`
+    * `core-gui`
 
 #### Si hay problemas al crear la interfaz hostonly:
 
